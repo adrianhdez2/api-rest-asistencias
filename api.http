@@ -1,0 +1,49 @@
+### Obtener todos los alumnos por estado (activos: 1 - inactivos: 0)
+GET http://localhost:3001/alumnos?estado=0
+
+### Actualizar estado del alumno
+
+PATCH http://localhost:3001/alumnos/
+Content-Type: 'application/json
+
+{ "id_estudiante": 27, "estado": 1 }
+
+### Obtener n alumnos
+GET http://localhost:3001/alumnos?limite=10
+
+### Obtener n alumno con cierto estado (activos: 1 - inactivos: 0)
+GET http://localhost:3001/alumnos?estado=0&limite=10
+
+### Obtener todos los alumnos
+GET http://localhost:3001/alumnos
+
+### Obtener datos por página
+GET http://localhost:3001/alumnos?limite=10&pagina=2
+
+### Obtener datos por página con cierto estado (activos: 1 - inactivos: 0) 
+GET http://localhost:3001/alumnos?&estado=1&limite=6&pagina=1
+
+
+### Obtener token de administrador
+POST http://localhost:3001/admins/login
+content-type: application/json
+
+{
+    "correo": "cesarahh3@gmail.com",
+    "password": "administrador"
+}
+
+### Actualizar contraseña de admin
+POST http://localhost:3001/admins/update
+content-type: 'application/json
+
+{
+    "correo": "cesarahh3@gmail.com",
+    "password": "administrador"
+}
+
+### Actualizar contraseña de admin
+GET http://localhost:3001/admins/verify
+
+### Obtener todos los administradores
+GET http://localhost:3001/admins/
