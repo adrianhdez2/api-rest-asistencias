@@ -10,3 +10,6 @@ alumnosRouter.post('/add', AlumnosController.addStudent) // --> Agregar nuevo al
 alumnosRouter.post('/save', AlumnosController.saveHoursByStudent) // Guardar las horas por alumno
 alumnosRouter.post('/update', AlumnosController.insertFinalHour) // Guardar hora final
 alumnosRouter.post('/activities', AlumnosController.saveActivities) // --> Guardar actividad del alumno por día
+alumnosRouter.get('/get', AlumnosController.getAllDatesStudents) // --> Obtener horas de alumnos activos
+alumnosRouter.get('/search', AlumnosController.getStudentsSearchByMatricula) // --> Busqueda de alumnos por matricula
+alumnosRouter.post('/hours', AlumnosController.saveHoursByStudentDay) // --> Guardar horas por alumno

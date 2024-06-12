@@ -314,4 +314,33 @@ export class AlumnosModel {
 
         return actividades[0]
     }
+
+    static async getDate() {
+        const [horas] = await connection.query(
+            'SELECT estudiantes.id_estudiante AS id_estudiante_estudiantes, estudiantes.nombres, estudiantes.apellido_p, estudiantes.matricula,estudiantes.apellido_m, estudiantes.tipo, horas.hora_entrada FROM estudiantes JOIN horas	ON estudiantes.id_estudiante = horas.id_estudiante WHERE horas.fecha = CURDATE() AND horas.hora_salida IS NULL'
+        )
+
+        if (!horas) return null
+
+        return horas
+    }
+
+    static async getSearchTerms({ newMatricula }) {
+        const [alumno] = await connection.query(
+            'SELECT id_estudiante, nombres, apellido_p, apellido_m, matricula, password, tipo FROM estudiantes WHERE estado = 1 AND matricula LIKE ?',
+            [`%${newMatricula}%`]
+        )
+
+        if (!alumno) return null
+
+        return alumno
+    }
+
+    static async saveHours({id_estudiante, fecha, hora_entrada, hora_salida, new_total_horas}){
+        const [horas] = await connection.query(
+            'INSERT INTO horas (id_estudiante, fecha, hora_entrada, hora_salida, total_horas) VALUES (?, ?, ?, ?, ?)',
+            [id_estudiante, fecha, hora_entrada, hora_salida, new_total_horas]
+        )
+        return horas 
+    }
 }

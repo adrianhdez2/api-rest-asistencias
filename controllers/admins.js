@@ -130,7 +130,7 @@ export class AdminsControllers {
     static async addAdmin(req, res) {
         const { names, last_name_p, last_name_m, correo, imagen } = req.body
 
-        if (!names || !last_name_m || !last_name_p || !correo || !imagen) return res.status(401).json({ error: "Datos no validos." })
+        if (!names || !last_name_m || !last_name_p || !correo) return res.status(401).json({ error: "Datos no validos." })
 
         const admin = await AdminsModel.insertNewAdmin({ names, last_name_p, last_name_m, correo, imagen })
 

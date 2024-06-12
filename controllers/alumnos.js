@@ -253,4 +253,44 @@ export class AlumnosController {
 
         return res.status(200).json({ status: true, message: "Se guardó correctamente tu actividad." })
     }
+
+    static async getAllDatesStudents(req, res) {
+        const alumnos = await AlumnosModel.getDate()
+
+        if (!alumnos) return res.status(200).json({})
+
+        return res.status(200).json(alumnos)
+    }
+
+    static async getStudentsSearchByMatricula(req, res) {
+        const { matricula } = req.query
+
+        if (!matricula) return res.status(401).json({ error: "No hay matricula." })
+
+        const newMatricula = matricula.toUpperCase()
+
+        const alumnos = await AlumnosModel.getSearchTerms({ newMatricula })
+
+        return res.status(200).json(alumnos)
+    }
+
+    static async saveHoursByStudentDay(req, res) {
+        const { id_estudiante, fecha, hora_entrada, hora_salida, total_horas } = req.body
+
+        console.log(req.body);
+
+        if (!id_estudiante || !fecha || !hora_entrada || !hora_salida || !total_horas) return res.status(401).json({ error: "Los datos son incorrectos." })
+
+        const alumno = await AlumnosModel.getStudentById({ id_estudiante })
+
+        if (!alumno) return res.status(401).json({ error: "El alumno no existe." })
+
+        const new_total_horas = parseInt(total_horas)
+
+        const horas = await AlumnosModel.saveHours({ id_estudiante, fecha, hora_entrada, hora_salida, new_total_horas })
+
+        if (!horas) return res.status(401).json({ error: "Ocurrió un error al guardar las horas." })
+
+        return res.status(200).json({ status: true, message: "Se guardó correctamente." })
+    }
 }

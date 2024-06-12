@@ -22,7 +22,7 @@ export class AdminsModel {
     static async insertNewAdmin({ names, last_name_p, last_name_m, correo, imagen }) {
         const [admin] = await connection.query(
             'INSERT INTO admins (nombres, apellido_p, apellido_m, correo, imagen) VALUES (?, ?, ?, ?, ?)',
-            [names, last_name_p, last_name_m, correo, imagen]
+            [names, last_name_p, last_name_m, correo, imagen ? imagen : null]
         )
         return admin
     }
