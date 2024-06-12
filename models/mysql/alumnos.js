@@ -94,6 +94,17 @@ export class AlumnosModel {
         return alumno[0]
     }
 
+    static async getStudentByMatricula({ newMatricula }) {
+        const [alumno] = await connection.query(
+            'SELECT id_estudiante, nombres, apellido_p, apellido_m, password, estado FROM estudiantes WHERE matricula = ? ',
+            [newMatricula]
+        )
+
+        if (!alumno) return null
+
+        return alumno[0]
+    }
+
     static async insertNewStudent({ names, last_name_p, last_name_m, matricula, carrera, tipo }) {
         const [alumno] = await connection.query(
             'INSERT INTO estudiantes (nombres, apellido_p, apellido_m, matricula, carrera, tipo) VALUES (?, ?, ?, ?, ?, ?)',
@@ -217,5 +228,90 @@ export class AlumnosModel {
         } catch (error) {
             throw new Error(`Error al enviar el correo: ${error.message}`)
         }
+    }
+
+    static async getHoursById({ id_estudiante }) {
+        const [horas] = await connection.query(
+            'SELECT id_hora, fecha, hora_entrada, hora_salida FROM horas WHERE id_estudiante = ? AND fecha = CURDATE()',
+            [id_estudiante]
+        )
+
+        if (!horas) return null
+
+        return horas[0]
+    }
+
+    static async updateFinalHour({ id_hora, hora_salida, total_horas }) {
+        const [hora] = await connection.query(
+            'UPDATE horas SET hora_salida = ?, total_horas = ? WHERE id_hora = ?',
+            [hora_salida, total_horas, id_hora]
+        )
+
+        return hora
+    }
+
+    static async insertHourEnter({ id_estudiante, fecha, hora_entrada }) {
+        const [hora] = await connection.query(
+            'INSERT INTO horas (id_estudiante, fecha, hora_entrada) VALUES (?, ?, ?)',
+            [id_estudiante, fecha, hora_entrada]
+        )
+
+        return hora
+    }
+
+    static async sendEmailOTP({ correo, OTP, newMatricula, nombre }) {
+        // const year = new Date()
+        const subject = `Código para ${newMatricula} - ${nombre}`
+        const body = `<p>El código de validación es: <strong>${OTP}</strong></p>`
+        try {
+            const response = await sendPersonalEmail(correo, subject, body)
+            return response
+        } catch (error) {
+            throw new Error(`Error al enviar el correo: ${error.message}`)
+        }
+    }
+
+    static async saveOTP({ newMatricula, OTP, expires_at }) {
+        const [alumno] = await connection.query(
+            'INSERT INTO otps (matricula, otp, expires_at) VALUES (?, ?, ?)',
+            [newMatricula, OTP, expires_at]
+        )
+        return alumno
+    }
+
+    static async getOTP({ newMatricula, otp }) {
+        const [otp_code] = await connection.query(
+            'SELECT * FROM otps WHERE matricula = ? AND otp = ?',
+            [newMatricula, otp]
+        )
+        if (otp_code.length === 0) return null
+        return otp_code[0]
+    }
+
+    static async deleteOTP({ id_otp }) {
+        const [otp_code] = await connection.query(
+            'DELETE FROM otps WHERE id_otp = ?',
+            [id_otp]
+        )
+        return otp_code
+    }
+
+    static async saveActivity({ detalles, id_estudiante, fecha }) {
+        const [actividad] = await connection.query(
+            'INSERT INTO actividades (detalles, id_estudiante, fecha) VALUES (?, ?, ?)',
+            [detalles, id_estudiante, fecha]
+        )
+        return actividad
+    }
+
+    static async getActivityByStudent({ id_estudiante }) {
+        const [actividades] = await connection.query(
+            'SELECT * FROM actividades WHERE id_estudiante = ? AND fecha = CURDATE()',
+            [id_estudiante]
+        )
+
+        if (!actividades) return null
+
+        return actividades[0]
     }
 }

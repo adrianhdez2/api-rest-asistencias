@@ -1,12 +1,22 @@
 import { AlumnosModel } from "../models/mysql/alumnos.js";
 import bcrypt from 'bcrypt'
 import Randomstring from 'randomstring'
+import { validateHours } from "../utils/validateHours.js";
+import { generateDate, generateHour } from "../utils/generate.js";
+import { validateExpiresOTP } from "../utils/validateExpiresOTP.js";
 
 function generatePassword() {
     const caracteres = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%&*()_+?';
     return Randomstring.generate({
         length: 10,
         charset: caracteres
+    });
+}
+
+function generateOTP() {
+    return Randomstring.generate({
+        length: 6,
+        charset: 'numeric'
     });
 }
 
@@ -109,5 +119,138 @@ export class AlumnosController {
         if (!alumno) return res.status(401).json({ error: "Error al insertar los datos del alumno." })
 
         return res.status(200).json({ status: true, message: "Se guardó correctamente." })
+    }
+
+    static async saveHoursByStudent(req, res) {
+        const { matricula, password } = req.body
+
+        if (!matricula || !password) return res.status(401).json({ error: "Datos incompletos." })
+
+        const newMatricula = matricula.toUpperCase()
+
+        const alumno = await AlumnosModel.getStudentByMatricula({ newMatricula })
+
+        if (!alumno) return res.status(401).json({ error: "No existe la matrícula solicitada." })
+
+        if (alumno.estado === 0) return res.status(401).json({ error: "La matrícula no esta activa. Acércate con un administrador." })
+
+        if (!alumno.password) return res.status(401).json({ error: "Esta matrícula no tiene un contraseña asociada. Acércate a un administrador y solicitala." })
+
+        const passwordMatch = await bcrypt.compare(password, alumno.password)
+
+        if (!passwordMatch) return res.status(401).json({ error: "La contraseña no es correcta." })
+
+        const id_estudiante = alumno.id_estudiante
+
+        const horas = await AlumnosModel.getHoursById({ id_estudiante }) // --> Obtener horas si la fecha es de hoy y corresponde al alumno
+
+        if (horas) {
+
+            if (horas.hora_salida) return res.status(404).json({ error: "Ya haz registrado tu hora de salida." })
+
+            const { hours, minutes, seconds } = validateHours(horas.hora_entrada) // --> Obtener tiempo transcurrido
+
+            if (hours >= 4) {
+                try {
+                    const correo = "cesarahh3@gmail.com"
+                    const nombre = alumno.nombres + " " + alumno.apellido_p + " " + alumno.apellido_m
+                    const OTP = generateOTP()
+                    const expires_at = new Date(Date.now() + 20 * 60 * 1000);
+                    const userInf = await AlumnosModel.saveOTP({ newMatricula, OTP, expires_at })
+
+                    if (!userInf) return res.status(401).json({ error: "Ocurrio un error al guardar el código" })
+
+                    await AlumnosModel.sendEmailOTP({ correo, OTP, newMatricula, nombre })
+
+                    return res.status(200).json({ status: 200, id_hora: horas.id_hora, message_email: `El código de validación para ${newMatricula} fue enviado a César Adrián` })
+                } catch (error) {
+                    return res.status(404).json({ error: "Ocurrió un error." })
+                }
+            }
+
+            const newHours = hours < 10 ? '0' + hours : hours
+            const newMinutes = minutes < 10 ? '0' + minutes : minutes
+            const newSeconds = seconds < 10 ? '0' + seconds : seconds
+
+
+            return res.status(401).json({ error: `Aún no haz cumplido las horas establecidas del día. Hasta el momento llevas: ${newHours}:${newMinutes}:${newSeconds}` })
+        }
+
+        const { year, month, day } = generateDate()
+        const { hours, minutes, seconds } = generateHour()
+        const fecha = year + '-' + month + '-' + day
+        const hora_entrada = hours + ':' + minutes + ':' + seconds
+
+        const horaEntrada = await AlumnosModel.insertHourEnter({ id_estudiante, fecha, hora_entrada })
+
+        if (!horaEntrada) return res.status(404).json({ error: "Ocurrió un errror al guarda la hora." })
+
+        return res.status(200).json({ status: true, message: `Se guardó correctamente la hora de entrada: ${hora_entrada}` })
+    }
+
+    static async insertFinalHour(req, res) {
+        const { id_hora, hora_salida, matricula } = req.body.studentValues
+        const { otp } = req.body
+        const newMatricula = matricula.toUpperCase()
+        const otpAdmin = await AlumnosModel.getOTP({ newMatricula, otp })
+
+        if (!otpAdmin) return res.status(401).json({ error: "El código no es valido." })
+
+        const { has_expire } = validateExpiresOTP(`${otpAdmin.expires_at}`)
+
+        if (has_expire) return res.status(401).json({ status: 'resend', error: "El código ha expirado." })
+
+        const alumno = await AlumnosModel.getStudentByMatricula({ newMatricula })
+
+        if (!alumno) return res.status(401).json({ error: "La matricula no es correcta." })
+
+        const id_estudiante = alumno.id_estudiante
+
+        const horas = await AlumnosModel.getHoursById({ id_estudiante })
+
+        if (!horas) res.status(401).json({ error: "No hay horas disponibles." })
+
+        if (!horas.hora_entrada) return res.status(401).json({ error: "Por favor registra tu entrada." })
+
+        const { hours } = validateHours(horas.hora_entrada)
+        const total_horas = hours
+
+        const newHours = await AlumnosModel.updateFinalHour({ id_hora, hora_salida, total_horas })
+
+        if (!newHours) return res.status(401).json({ error: "Ocurrió un error al guardar tu hora de salida." })
+
+        const id_otp = otpAdmin.id_otp
+
+        const otp_code = await AlumnosModel.deleteOTP({ id_otp })
+
+        if (!otp_code) return res.status(401).json({ error: "Ocurrio error al eliminar el codigo otp." })
+
+        return res.status(200).json({ status: true, message: "Se verificó correctamente." });
+    }
+
+    static async saveActivities(req, res) {
+        const { detalles, matricula } = req.body
+
+        if (!detalles || !matricula) return res.status(401).json({ error: "Los datos no son correctos." })
+
+        const newMatricula = matricula.toUpperCase()
+
+        const alumno = await AlumnosModel.getStudentByMatricula({ newMatricula })
+
+        if (!alumno) return res.status(401).json({ error: "La matrícula no es correcta." })
+
+        const { year, month, day } = generateDate()
+        const fecha = year + '-' + month + '-' + day
+        const id_estudiante = alumno.id_estudiante
+
+        const actividades = await AlumnosModel.getActivityByStudent({ id_estudiante })
+
+        if (actividades) return res.status(401).json({ error: "Ya tienes tu actividad diaria guadada." })
+
+        const actividad = await AlumnosModel.saveActivity({ detalles, id_estudiante, fecha })
+
+        if (!actividad) return res.status(401).json({ error: "Ocurrió un errro al guardar la actividad." })
+
+        return res.status(200).json({ status: true, message: "Se guardó correctamente tu actividad." })
     }
 }
