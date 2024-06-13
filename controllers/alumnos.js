@@ -20,6 +20,10 @@ function generateOTP() {
     });
 }
 
+function getRandomNumber() {
+    return Math.floor(Math.random() * 4);
+}
+
 export class AlumnosController {
     static async getStudents(req, res) {
         const { estado, limite, pagina } = req.query
@@ -143,6 +147,9 @@ export class AlumnosController {
         const id_estudiante = alumno.id_estudiante
 
         const horas = await AlumnosModel.getHoursById({ id_estudiante }) // --> Obtener horas si la fecha es de hoy y corresponde al alumno
+        const nombre = alumno.nombres + " " + alumno.apellido_p + " " + alumno.apellido_m
+        const correo = await AlumnosModel.getEmailAdminsActive()
+        const correoRandom = await correo[getRandomNumber()].correo
 
         if (horas) {
 
@@ -152,17 +159,18 @@ export class AlumnosController {
 
             if (hours >= 4) {
                 try {
-                    const correo = "cesarahh3@gmail.com"
-                    const nombre = alumno.nombres + " " + alumno.apellido_p + " " + alumno.apellido_m
                     const OTP = generateOTP()
                     const expires_at = new Date(Date.now() + 20 * 60 * 1000);
                     const userInf = await AlumnosModel.saveOTP({ newMatricula, OTP, expires_at })
 
                     if (!userInf) return res.status(401).json({ error: "Ocurrio un error al guardar el código" })
 
-                    await AlumnosModel.sendEmailOTP({ correo, OTP, newMatricula, nombre })
+                    await AlumnosModel.sendEmailOTP({ correoRandom, OTP, newMatricula, nombre })
 
-                    return res.status(200).json({ status: 200, id_hora: horas.id_hora, message_email: `El código de validación para ${newMatricula} fue enviado a César Adrián` })
+                    const admin = await AlumnosModel.getAdminNameByEmail({ correoRandom })
+                    const nombreAdmin = admin.nombres + " " + admin.apellido_p + " " + admin.apellido_m
+
+                    return res.status(200).json({ status: 200, id_hora: horas.id_hora, message_email: `El código de validación para ${newMatricula} fue enviado a ${nombreAdmin}` })
                 } catch (error) {
                     return res.status(404).json({ error: "Ocurrió un error." })
                 }
@@ -184,6 +192,13 @@ export class AlumnosController {
         const horaEntrada = await AlumnosModel.insertHourEnter({ id_estudiante, fecha, hora_entrada })
 
         if (!horaEntrada) return res.status(404).json({ error: "Ocurrió un errror al guarda la hora." })
+
+        const emailsAdmins = await AlumnosModel.getAllEmailAdmins()
+
+        await emailsAdmins.forEach(email => {
+            let correoAdmin = email.correo
+            AlumnosModel.sendEmailNotification({ correoAdmin, nombre, newMatricula, hora_entrada, fecha })
+        })
 
         return res.status(200).json({ status: true, message: `Se guardó correctamente la hora de entrada: ${hora_entrada}` })
     }

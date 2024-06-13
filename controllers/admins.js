@@ -1,7 +1,6 @@
 import { AdminsModel } from "../models/mysql/admins.js";
 import bcrypt from 'bcrypt'
 import dotenv from 'dotenv'
-import { json } from "express";
 import jwt from 'jsonwebtoken'
 import Randomstring from 'randomstring'
 
@@ -19,6 +18,24 @@ export class AdminsControllers {
     static async getAdmins(req, res) {
         const admins = await AdminsModel.getAll()
         return res.status(200).json(admins)
+    }
+
+    static async getAdminByToken(req, res) {
+        try {
+            const token = req.cookies.token
+
+            const decoded = jwt.verify(token, process.env.KEY)
+            const id_admin = decoded.id
+
+            const admin = await AdminsModel.getStateById({ id_admin })
+
+            if (!admin) return res.status(401).json({ error: "No existe administrador." })
+
+            return res.status(200).json(admin)
+
+        } catch (error) {
+            return res.status(401).json({ error: "No existe token de usuario." })
+        }
     }
 
     static async getLoginToken(req, res) {
@@ -147,5 +164,24 @@ export class AdminsControllers {
         const admin = await AdminsModel.getImageById({ id_admin })
 
         return res.status(200).json(admin)
+    }
+
+    static async updateState(req, res) {
+        const { estado } = req.body
+
+        const token = req.cookies.token
+
+        if (!token) return res.status(401).json({ error: "No hay token de usuario" })
+        if (estado < 0 || estado > 1 || estado === undefined) return res.status(401).json({ error: "No hay estado valido." })
+
+        const decoded = jwt.verify(token, process.env.KEY)
+        const id_admin = decoded.id
+
+        const admin = AdminsModel.updateState({ estado, id_admin })
+
+        if (!admin) return res.status(401).json({ error: "Ocurrió un errror al actualizar el estado de notificationes." })
+
+        if (estado === 1) return res.status(200).json({ status: true, message: "Ahora recibirás notificationes." })
+        if (estado === 0) return res.status(200).json({ status: true, message: "Dejarás de recibir notificationes." })
     }
 }

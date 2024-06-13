@@ -48,4 +48,17 @@ export class AdminsModel {
         return admin[0]
     }
 
+    static async getStateById({ id_admin }) {
+        const [admin] = await connection.query('SELECT estado FROM admins WHERE id_admin = ?', [id_admin])
+        if (admin.length === 0) return null
+
+        return admin[0]
+    }
+
+    static async updateState({ estado, id_admin }) {
+        const [admin] = await connection.query('UPDATE admins SET estado = ? WHERE id_admin = ?', [estado, id_admin])
+
+        return admin
+    }
+
 }

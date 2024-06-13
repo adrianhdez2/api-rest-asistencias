@@ -230,6 +230,133 @@ export class AlumnosModel {
         }
     }
 
+    static async sendEmailNotification({ correoAdmin, nombre, newMatricula, hora_entrada, fecha }) {
+        const year = new Date()
+        const body = `
+        <!DOCTYPE html>
+        <html lang="es">
+
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Verificar correo electrónico</title>
+            <style>
+                body {
+                    font-family: Arial, sans-serif;
+                    background-color: #f4f4f4;
+                    margin: 0;
+                    padding: 0;
+                }
+
+                .email-container {
+                    max-width: 600px;
+                    margin: 0 auto;
+                    background-color: #ffffff;
+                    padding: 20px;
+                    border: 1px solid #dddddd;
+                }
+
+                .email-header {
+                    text-align: center;
+                    padding: 10px 0;
+                    background-color: #2B2B2B;
+                    color: #ffffff;
+                }
+
+                .email-header h1 {
+                    margin: 0;
+                    font-size: 24px;
+                }
+
+                .email-body {
+                    padding: 20px;
+                    color: #333333;
+                }
+
+                .email-footer {
+                    text-align: center;
+                    padding: 10px;
+                    background-color: #f4f4f4;
+                    font-size: 14px;
+                    color: #888888;
+                }
+
+                table {
+                    width: 100%;
+                    border-collapse: collapse;
+                }
+
+                th,
+                td {
+                    border: 1px solid #ddd;
+                    padding: 8px;
+                    text-align: center;
+                }
+
+                th {
+                    background-color: #2B2B2B;
+                    color: white;
+                }
+
+                tr:nth-child(even) {
+                    background-color: #f2f2f2;
+                }
+
+                tr:hover {
+                    background-color: #ddd;
+                }
+
+                td {
+                    padding: 12px;
+                }
+            </style>
+        </head>
+
+        <body>
+            <div class="email-container">
+                <div class="email-header">
+                    <h1>X DevLab</h1>
+                </div>
+                <div class="email-body">
+                    <p>Un alumno ha iniciado el tiempo de servicio social / práctica profesional.</p>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Matrícula</th>
+                                <th>Nombre completo</th>
+                                <th>Hora de entrada</th>
+                                <th>Fecha</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>
+                                    <strong>${newMatricula}</strong>
+                                </td>
+                                <td>${nombre}</td>
+                                <td>${hora_entrada}</td>
+                                <td>${fecha}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="email-footer">
+                    <p>&copy; ${year.getFullYear()} X DevLab. Todos los derechos reservados.</p>
+                </div>
+            </div>
+        </body>
+
+        </html>
+        `
+
+        try {
+            const response = await sendPersonalEmail(correoAdmin, `Asistencia de alumno: ${nombre}`, body)
+            return response
+        } catch (error) {
+            throw new Error(`Error al enviar el correo: ${error.message}`)
+        }
+    }
+
     static async getHoursById({ id_estudiante }) {
         const [horas] = await connection.query(
             'SELECT id_hora, fecha, hora_entrada, hora_salida FROM horas WHERE id_estudiante = ? AND fecha = CURDATE()',
@@ -259,12 +386,12 @@ export class AlumnosModel {
         return hora
     }
 
-    static async sendEmailOTP({ correo, OTP, newMatricula, nombre }) {
+    static async sendEmailOTP({ correoRandom, OTP, newMatricula, nombre }) {
         // const year = new Date()
         const subject = `Código para ${newMatricula} - ${nombre}`
         const body = `<p>El código de validación es: <strong>${OTP}</strong></p>`
         try {
-            const response = await sendPersonalEmail(correo, subject, body)
+            const response = await sendPersonalEmail(correoRandom, subject, body)
             return response
         } catch (error) {
             throw new Error(`Error al enviar el correo: ${error.message}`)
@@ -336,11 +463,31 @@ export class AlumnosModel {
         return alumno
     }
 
-    static async saveHours({id_estudiante, fecha, hora_entrada, hora_salida, new_total_horas}){
+    static async saveHours({ id_estudiante, fecha, hora_entrada, hora_salida, new_total_horas }) {
         const [horas] = await connection.query(
             'INSERT INTO horas (id_estudiante, fecha, hora_entrada, hora_salida, total_horas) VALUES (?, ?, ?, ?, ?)',
             [id_estudiante, fecha, hora_entrada, hora_salida, new_total_horas]
         )
-        return horas 
+        return horas
+    }
+
+    static async getEmailAdminsActive() {
+        const [admins] = await connection.query('SELECT correo FROM admins WHERE estado = 1')
+
+        if (admins.length === 0) return null
+
+        return admins
+    }
+
+    static async getAllEmailAdmins(){
+        const [admin] = await connection.query('SELECT correo FROM admins')
+        if (admin.length === 0) return null
+        return admin
+    }
+
+    static async getAdminNameByEmail({correoRandom}){
+        const [admin] = await connection.query('SELECT nombres, apellido_p, apellido_m FROM admins WHERE correo = ?', [correoRandom])
+        if (admin.length === 0) return null
+        return admin[0]
     }
 }
