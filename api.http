@@ -9,7 +9,7 @@ Content-Type: 'application/json
 { "id_estudiante": 27, "estado": 1 }
 
 ### Obtener n alumnos
-GET http://localhost:3001/alumnos?limite=10
+GET http://localhost:3001/alumnos?limite=1
 
 ### Obtener n alumno con cierto estado (activos: 1 - inactivos: 0)
 GET http://localhost:3001/alumnos?estado=0&limite=10
@@ -18,10 +18,10 @@ GET http://localhost:3001/alumnos?estado=0&limite=10
 GET http://localhost:3001/alumnos
 
 ### Obtener datos por página
-GET http://localhost:3001/alumnos?limite=10&pagina=2
+GET http://localhost:3001/alumnos?limite=7&pagina=3
 
 ### Obtener datos por página con cierto estado (activos: 1 - inactivos: 0) 
-GET http://localhost:3001/alumnos?&estado=1&limite=6&pagina=1
+GET http://localhost:3001/alumnos?&estado=1&limite=7&pagina=1
 
 
 ### Obtener token de administrador

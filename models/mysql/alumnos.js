@@ -4,7 +4,7 @@ import { sendPersonalEmail } from '../../utils/sendEmail.js'
 export class AlumnosModel {
     static async getStudents() {
         const [alumno] = await connection.query(
-            'SELECT id_estudiante, nombres, apellido_p, apellido_m, matricula, carrera, tipo, estado, password from estudiantes'
+            'SELECT estudiantes.id_estudiante AS id_estudiante_estudiantes, estudiantes.nombres, estudiantes.apellido_p, estudiantes.apellido_m, estudiantes.matricula, estudiantes.tipo, estudiantes.estado, estudiantes.password, IFNULL(suma_horas.total_horas, 0) AS total_horas FROM estudiantes LEFT JOIN (SELECT id_estudiante, SUM(total_horas) AS total_horas FROM horas GROUP BY id_estudiante) AS suma_horas ON estudiantes.id_estudiante = suma_horas.id_estudiante ORDER BY estudiantes.tipo DESC'
         )
 
         if (!alumno) return []
@@ -14,7 +14,7 @@ export class AlumnosModel {
 
     static async getStudentByState({ estado }) {
         const [alumno] = await connection.query(
-            'SELECT id_estudiante, nombres, apellido_p, apellido_m, matricula, carrera, tipo, estado FROM estudiantes WHERE estado = ?',
+            'SELECT estudiantes.id_estudiante AS id_estudiante_estudiantes, estudiantes.nombres, estudiantes.apellido_p, estudiantes.apellido_m, estudiantes.matricula, estudiantes.tipo, estudiantes.estado, estudiantes.password, IFNULL(suma_horas.total_horas, 0) AS total_horas FROM estudiantes LEFT JOIN (SELECT id_estudiante, SUM(total_horas) AS total_horas FROM horas GROUP BY id_estudiante) AS suma_horas ON estudiantes.id_estudiante = suma_horas.id_estudiante WHERE estado = ?',
             [estado]
         )
 
@@ -34,7 +34,7 @@ export class AlumnosModel {
 
     static async getStudentLimit({ limit }) {
         const [alumno] = await connection.query(
-            'SELECT id_estudiante, nombres, apellido_p, apellido_m, matricula, carrera, tipo, estado FROM estudiantes LIMIT ?',
+            'SELECT estudiantes.id_estudiante AS id_estudiante_estudiantes, estudiantes.nombres, estudiantes.apellido_p, estudiantes.apellido_m, estudiantes.matricula, estudiantes.tipo, estudiantes.estado, estudiantes.password, IFNULL(suma_horas.total_horas, 0) AS total_horas FROM estudiantes LEFT JOIN (SELECT id_estudiante, SUM(total_horas) AS total_horas FROM horas GROUP BY id_estudiante) AS suma_horas ON estudiantes.id_estudiante = suma_horas.id_estudiante LIMIT ?',
             [limit]
         )
 
@@ -45,7 +45,7 @@ export class AlumnosModel {
 
     static async getStudenByLimitAndState({ estado, limit }) {
         const [alumno] = await connection.query(
-            'SELECT id_estudiante, nombres, apellido_p, apellido_m, matricula, carrera, tipo, estado FROM estudiantes WHERE estado = ? LIMIT ?',
+            'SELECT estudiantes.id_estudiante AS id_estudiante_estudiantes, estudiantes.nombres, estudiantes.apellido_p, estudiantes.apellido_m, estudiantes.matricula, estudiantes.tipo, estudiantes.carrera, IFNULL(suma_horas.total_horas, 0) AS total_horas FROM estudiantes LEFT JOIN (SELECT id_estudiante, SUM(total_horas) AS total_horas FROM horas GROUP BY id_estudiante) AS suma_horas ON estudiantes.id_estudiante = suma_horas.id_estudiante WHERE estado = ? LIMIT ?',
             [estado, limit]
         )
 
@@ -56,7 +56,7 @@ export class AlumnosModel {
 
     static async getStudentsByPagination({ limit, offset }) {
         const [alumno] = await connection.query(
-            'SELECT id_estudiante, nombres, apellido_p, apellido_m, matricula, carrera, tipo, estado FROM estudiantes LIMIT ? OFFSET ?',
+            'SELECT estudiantes.id_estudiante AS id_estudiante_estudiantes, estudiantes.nombres, estudiantes.apellido_p, estudiantes.apellido_m, estudiantes.matricula, estudiantes.tipo, estudiantes.carrera, IFNULL(suma_horas.total_horas, 0) AS total_horas FROM estudiantes LEFT JOIN (SELECT id_estudiante, SUM(total_horas) AS total_horas FROM horas GROUP BY id_estudiante) AS suma_horas ON estudiantes.id_estudiante = suma_horas.id_estudiante LIMIT ? OFFSET ?',
             [limit, offset]
         )
 
@@ -67,7 +67,7 @@ export class AlumnosModel {
 
     static async getStudentsByPaginationAndState({ estado, limit, offset }) {
         const [alumno] = await connection.query(
-            'SELECT id_estudiante, nombres, apellido_p, apellido_m, matricula, carrera, tipo, estado FROM estudiantes WHERE estado = ? LIMIT ? OFFSET ?',
+            'SELECT estudiantes.id_estudiante AS id_estudiante_estudiantes, estudiantes.nombres, estudiantes.apellido_p, estudiantes.apellido_m, estudiantes.matricula, estudiantes.tipo, estudiantes.carrera, IFNULL(suma_horas.total_horas, 0) AS total_horas FROM estudiantes LEFT JOIN (SELECT id_estudiante, SUM(total_horas) AS total_horas FROM horas GROUP BY id_estudiante) AS suma_horas ON estudiantes.id_estudiante = suma_horas.id_estudiante WHERE estado = ? LIMIT ? OFFSET ?',
             [estado, limit, offset]
         )
 
@@ -76,7 +76,7 @@ export class AlumnosModel {
         return alumno
     }
 
-    static async counttStudents() {
+    static async countStudents() {
         const [count] = await connection.query(
             'SELECT COUNT(*) AS total FROM estudiantes'
         )
@@ -454,7 +454,7 @@ export class AlumnosModel {
 
     static async getSearchTerms({ newMatricula }) {
         const [alumno] = await connection.query(
-            'SELECT id_estudiante, nombres, apellido_p, apellido_m, matricula, password, tipo FROM estudiantes WHERE estado = 1 AND matricula LIKE ?',
+            'SELECT estudiantes.id_estudiante AS id_estudiante_estudiantes, estudiantes.nombres, estudiantes.apellido_p, estudiantes.apellido_m, estudiantes.matricula, estudiantes.tipo, IFNULL(suma_horas.total_horas, 0) AS total_horas FROM estudiantes LEFT JOIN (SELECT id_estudiante, SUM(total_horas) AS total_horas FROM horas GROUP BY id_estudiante) AS suma_horas ON estudiantes.id_estudiante = suma_horas.id_estudiante WHERE estudiantes.estado = 1 AND estudiantes.matricula LIKE ?',
             [`%${newMatricula}%`]
         )
 

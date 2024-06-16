@@ -33,7 +33,7 @@ export class AlumnosController {
             const limit = parseInt(limite)
             const offset = (page - 1) * limit
 
-            const count = await AlumnosModel.counttStudents()
+            const count = await AlumnosModel.countStudents()
             const alumnos = await AlumnosModel.getStudentsByPaginationAndState({ estado, limit, offset })
             const totalPages = Math.ceil(count[0].total / limit)
             return res.status(200).json({ alumnos, totalPages })
@@ -89,8 +89,6 @@ export class AlumnosController {
             const alumno = await AlumnosModel.getStudentById({ id_estudiante })
 
             if (alumno.length === 0) return res.status(404).json({ error: "No hay alumnos disponibles." })
-
-
 
             const password = generatePassword()
             const hashedPassword = await bcrypt.hash(password, 10)
@@ -292,9 +290,9 @@ export class AlumnosController {
     static async saveHoursByStudentDay(req, res) {
         const { id_estudiante, fecha, hora_entrada, hora_salida, total_horas } = req.body
 
-        console.log(req.body);
+        if (total_horas <= 0) return res.status(401).json({ error: "Ingresa el menos 1 hora." })
 
-        if (!id_estudiante || !fecha || !hora_entrada || !hora_salida || !total_horas) return res.status(401).json({ error: "Los datos son incorrectos." })
+        if (!id_estudiante || !fecha || !hora_entrada || !hora_salida) return res.status(401).json({ error: "Los datos son incorrectos." })
 
         const alumno = await AlumnosModel.getStudentById({ id_estudiante })
 
