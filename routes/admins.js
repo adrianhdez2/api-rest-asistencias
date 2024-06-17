@@ -14,3 +14,4 @@ adminsRouter.post('/add', AdminsControllers.addAdmin) // --> Agregar administrad
 adminsRouter.post('/image', AdminsControllers.getImagenById) // --> Obtener imagen de administrador
 adminsRouter.get('/get', AdminsControllers.getAdminByToken) // --> Obtener administrador por token
 adminsRouter.post('/notifications', AdminsControllers.updateState) // --> Actualizar estado de administrador
+adminsRouter.post('/reports', AdminsControllers.getReports)

@@ -2,17 +2,10 @@ import { AdminsModel } from "../models/mysql/admins.js";
 import bcrypt from 'bcrypt'
 import dotenv from 'dotenv'
 import jwt from 'jsonwebtoken'
-import Randomstring from 'randomstring'
+import { formatJSON } from "../utils/format.js";
+import { generatePassword } from '../utils/generate.js'
 
 dotenv.config()
-
-function generatePassword() {
-    const caracteres = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%&*()_+?';
-    return Randomstring.generate({
-        length: 10,
-        charset: caracteres
-    });
-}
 
 export class AdminsControllers {
     static async getAdmins(req, res) {
@@ -184,4 +177,68 @@ export class AdminsControllers {
         if (estado === 1) return res.status(200).json({ status: true, message: "Ahora recibirás notificationes." })
         if (estado === 0) return res.status(200).json({ status: true, message: "Dejarás de recibir notificationes." })
     }
+
+    static async getReports(req, res) {
+        const { alumno_id, tipo_reporte, alumno_tipo } = req.body
+
+        if (!tipo_reporte || !alumno_id || !alumno_tipo) return res.status(401).json({ error: "Los datos no son validos." })
+
+        if (tipo_reporte === 'lista') {
+
+            if (alumno_tipo === 'servicio_social' || alumno_tipo === 'practica_profesional') {
+                const alumnos = await AdminsModel.getStudentsByType({ alumno_tipo })
+
+                if (!alumnos) return res.status(401).json({ error: "No hay estudiantes disponibles." })
+
+                return res.status(200).json({ status: true, message: "Generado", nombre: `Lista_de_alumnos_de_${alumno_tipo}`, tipo: tipo_reporte, data: alumnos })
+            }
+
+            if (alumno_tipo === 'servicio_y_practica') {
+                const alumnos = await AdminsModel.getAllStudents()
+                if (!alumnos) return res.status(401).json({ error: "No hay estudiantes disponibles." })
+                return res.status(200).json({ status: true, message: "Generado", nombre: "Lista_general_de_alumnos", tipo: tipo_reporte, data: alumnos })
+            }
+
+
+            return res.status(401).json({ error: "El tipo no existe." })
+        }
+
+        if (tipo_reporte === 'horas') {
+
+            if (alumno_tipo === 'servicio_social' || alumno_tipo === 'practica_profesional') {
+                const alumnos = await AdminsModel.getHoursStudentsByType({ alumno_tipo })
+
+                if (!alumnos) return res.status(401).json({ error: "No hay estudiantes disponibles." })
+                const data = formatJSON(alumnos)
+                return res.status(200).json({ status: true, message: "Generado", nombre: `Reporte_de_horas_de_${alumno_tipo}`, tipo: tipo_reporte, data: data })
+            }
+
+            if (alumno_tipo === 'servicio_y_practica') {
+                const alumnos = await AdminsModel.getAllHoursStudents()
+                if (!alumnos) return res.status(401).json({ error: "No hay estudiantes disponibles." })
+                const data = formatJSON(alumnos)
+                return res.status(200).json({ status: true, message: "Generado", nombre: "Reporte_general_de_horas", tipo: tipo_reporte, data: data })
+            }
+
+
+            return res.status(401).json({ error: "El tipo no existe." })
+        }
+
+        if (tipo_reporte === 'actividades') {
+            const alumno = await AdminsModel.getStudentById({ alumno_id })
+            if (!alumno) return res.status(401).json({ error: "El id de usuario no es valido." })
+
+            const actividades = await AdminsModel.getActivitiesByStudentId({ alumno_id })
+            if (!actividades) return res.status(401).json({ error: "El alumno aún no ha generado actividades." })
+
+            const fileName = `${alumno.matricula}_${alumno.nombres}_${alumno.apellido_p}_${alumno.apellido_m}`
+
+
+
+            return res.status(200).json({ status: true, message: "Generado", nombre: fileName, tipo: tipo_reporte, data: actividades });
+        }
+
+        return res.status(401).json({ error: "El tipo no existe." })
+    }
 }
+

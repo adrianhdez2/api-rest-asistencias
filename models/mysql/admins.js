@@ -61,4 +61,38 @@ export class AdminsModel {
         return admin
     }
 
+    static async getAllStudents() {
+        const [alumnos] = await connection.query('SELECT matricula AS MATRICULA, nombres AS "NOMBRE(S)", apellido_p AS "APELLIDO PATERNO", apellido_m AS "APELLIDO MATERNO", carrera AS CARRERA FROM estudiantes WHERE tipo = "practica_profesional" OR estudiantes.tipo = "servicio_social" ORDER BY matricula')
+        if (alumnos.length === 0) return null
+        return alumnos
+    }
+
+    static async getAllHoursStudents() {
+        const [alumnos] = await connection.query('SELECT estudiantes.id_estudiante AS id_estudiante_estudiantes, estudiantes.nombres, estudiantes.apellido_p, estudiantes.apellido_m, estudiantes.matricula, estudiantes.tipo, estudiantes.carrera, IFNULL(suma_horas.total_horas, 0) AS total_horas FROM estudiantes LEFT JOIN (SELECT id_estudiante, SUM(total_horas) AS total_horas FROM horas GROUP BY id_estudiante) AS suma_horas ON estudiantes.id_estudiante = suma_horas.id_estudiante WHERE estudiantes.tipo = "practica_profesional" OR estudiantes.tipo = "servicio_social"')
+        if (alumnos.length === 0) return null
+        return alumnos
+    }
+
+    static async getStudentsByType({ alumno_tipo }) {
+        const [alumnos] = await connection.query('SELECT matricula AS MATRICULA, nombres AS "NOMBRE(S)", apellido_p AS "APELLIDO PATERNO", apellido_m AS "APELLIDO MATERNO", carrera AS "CARRERA" FROM estudiantes WHERE tipo = ?', [alumno_tipo])
+        if (alumnos.length === 0) return null
+        return alumnos
+    }
+    static async getHoursStudentsByType({ alumno_tipo }) {
+        const [alumnos] = await connection.query('SELECT estudiantes.id_estudiante AS id_estudiante_estudiantes, estudiantes.nombres, estudiantes.apellido_p, estudiantes.apellido_m, estudiantes.matricula, estudiantes.tipo, estudiantes.carrera, IFNULL(suma_horas.total_horas, 0) AS total_horas FROM estudiantes LEFT JOIN (SELECT id_estudiante, SUM(total_horas) AS total_horas FROM horas GROUP BY id_estudiante) AS suma_horas ON estudiantes.id_estudiante = suma_horas.id_estudiante WHERE estudiantes.tipo = ?', [alumno_tipo])
+        if (alumnos.length === 0) return null
+        return alumnos
+    }
+
+    static async getActivitiesByStudentId({ alumno_id }) {
+        const [actividades] = await connection.query('SELECT id_actividad AS "ID ACTIVIDAD", fecha AS FECHA, detalles AS DETALLES FROM actividades WHERE actividades.id_estudiante = ? ORDER BY fecha', [alumno_id])
+        if (actividades.length === 0) return null
+        return actividades
+    }
+
+    static async getStudentById({ alumno_id }) {
+        const [alumno] = await connection.query('SELECT matricula, nombres, apellido_p, apellido_m FROM estudiantes WHERE id_estudiante = ?', [alumno_id])
+        if (alumno.length === 0) return null
+        return alumno[0]
+    }
 }

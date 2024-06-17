@@ -1,27 +1,11 @@
 import { AlumnosModel } from "../models/mysql/alumnos.js";
 import bcrypt from 'bcrypt'
-import Randomstring from 'randomstring'
 import { validateHours } from "../utils/validateHours.js";
-import { generateDate, generateHour } from "../utils/generate.js";
+import { generateDate, generateHour, generatePassword, generateOTP } from "../utils/generate.js";
 import { validateExpiresOTP } from "../utils/validateExpiresOTP.js";
 
-function generatePassword() {
-    const caracteres = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%&*()_+?';
-    return Randomstring.generate({
-        length: 10,
-        charset: caracteres
-    });
-}
-
-function generateOTP() {
-    return Randomstring.generate({
-        length: 6,
-        charset: 'numeric'
-    });
-}
-
-function getRandomNumber() {
-    return Math.floor(Math.random() * 4);
+function getRandomNumber(total) {
+    return Math.floor(Math.random() * total);
 }
 
 export class AlumnosController {
@@ -147,7 +131,8 @@ export class AlumnosController {
         const horas = await AlumnosModel.getHoursById({ id_estudiante }) // --> Obtener horas si la fecha es de hoy y corresponde al alumno
         const nombre = alumno.nombres + " " + alumno.apellido_p + " " + alumno.apellido_m
         const correo = await AlumnosModel.getEmailAdminsActive()
-        const correoRandom = await correo[getRandomNumber()].correo
+        const correoRandom = await correo[getRandomNumber(correo.length)].correo
+        console.log(correoRandom);
 
         if (horas) {
 

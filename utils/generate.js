@@ -1,3 +1,5 @@
+import Randomstring from 'randomstring'
+
 export const generateHour = () => {
     const d = new Date()
 
@@ -15,4 +17,19 @@ export const generateDate = () => {
     const day = d.getDate() < 10 ? '0' + d.getDate() : d.getDate()
 
     return { year, month, day }
+}
+
+export function generatePassword() {
+    const caracteres = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%&*()_+?';
+    return Randomstring.generate({
+        length: 10,
+        charset: caracteres
+    });
+}
+
+export function generateOTP() {
+    return Randomstring.generate({
+        length: 6,
+        charset: 'numeric'
+    });
 }
