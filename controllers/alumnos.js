@@ -132,7 +132,6 @@ export class AlumnosController {
         const nombre = alumno.nombres + " " + alumno.apellido_p + " " + alumno.apellido_m
         const correo = await AlumnosModel.getEmailAdminsActive()
         const correoRandom = await correo[getRandomNumber(correo.length)].correo
-        console.log(correoRandom);
 
         if (horas) {
 
@@ -178,10 +177,10 @@ export class AlumnosController {
 
         const emailsAdmins = await AlumnosModel.getAllEmailAdmins()
 
-        await emailsAdmins.forEach(email => {
-            let correoAdmin = email.correo
-            AlumnosModel.sendEmailNotification({ correoAdmin, nombre, newMatricula, hora_entrada, fecha })
-        })
+        // await emailsAdmins.forEach(email => {
+        //     let correoAdmin = email.correo
+        //     AlumnosModel.sendEmailNotification({ correoAdmin, nombre, newMatricula, hora_entrada, fecha })
+        // })
 
         return res.status(200).json({ status: true, message: `Se guardó correctamente la hora de entrada: ${hora_entrada}` })
     }

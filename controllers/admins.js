@@ -87,9 +87,9 @@ export class AdminsControllers {
                 return res.json({ status: true, message: 'Se cerró la sesión' })
             }
 
-            return res.json({ status: false, message: 'Error al cerrar sesión' })
+            return res.json({ status: false, message: 'Ocurrió un error al cerrar sesión.' })
         } catch (error) {
-            return res.json(error)
+            return res.status(401).json({ error: "Ocurrió un error al cerrar sesión." })
         }
     }
 
@@ -160,19 +160,17 @@ export class AdminsControllers {
     }
 
     static async updateState(req, res) {
-        const { estado } = req.body
+        const { estado, id_admin } = req.body
 
-        const token = req.cookies.token
+        if (estado < 0 || estado > 1 || estado === undefined || id_admin == undefined) return res.status(401).json({ error: "Los datos no son válidos." })
 
-        if (!token) return res.status(401).json({ error: "No hay token de usuario" })
-        if (estado < 0 || estado > 1 || estado === undefined) return res.status(401).json({ error: "No hay estado valido." })
+        const admin = await AdminsModel.getStateById({ id_admin })
 
-        const decoded = jwt.verify(token, process.env.KEY)
-        const id_admin = decoded.id
+        if (!admin) return res.status(401).json({ error: "El valor parece que no es válido." })
 
-        const admin = AdminsModel.updateState({ estado, id_admin })
+        const notifications = AdminsModel.updateState({ estado, id_admin })
 
-        if (!admin) return res.status(401).json({ error: "Ocurrió un errror al actualizar el estado de notificationes." })
+        if (!notifications) return res.status(401).json({ error: "Ocurrió un errror al actualizar el estado de notificationes." })
 
         if (estado === 1) return res.status(200).json({ status: true, message: "Ahora recibirás notificationes." })
         if (estado === 0) return res.status(200).json({ status: true, message: "Dejarás de recibir notificationes." })

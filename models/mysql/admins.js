@@ -49,7 +49,7 @@ export class AdminsModel {
     }
 
     static async getStateById({ id_admin }) {
-        const [admin] = await connection.query('SELECT estado FROM admins WHERE id_admin = ?', [id_admin])
+        const [admin] = await connection.query('SELECT id_admin, estado FROM admins WHERE id_admin = ?', [id_admin])
         if (admin.length === 0) return null
 
         return admin[0]
