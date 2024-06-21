@@ -387,9 +387,97 @@ export class AlumnosModel {
     }
 
     static async sendEmailOTP({ correoRandom, OTP, newMatricula, nombre }) {
-        // const year = new Date()
+        const year = new Date()
         const subject = `Código para ${newMatricula} - ${nombre}`
-        const body = `<p>El código de validación es: <strong>${OTP}</strong></p>`
+        const body = `
+            <!DOCTYPE html>
+            <html lang="es">
+
+            <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <title>Código de verificación</title>
+                <style>
+                    body {
+                        font-family: Arial, sans-serif;
+                        background-color: #f4f4f4;
+                        margin: 0;
+                        padding: 0;
+                    }
+
+                    .email-container {
+                        max-width: 600px;
+                        margin: 0 auto;
+                        background-color: #ffffff;
+                        padding: 20px;
+                        border: 1px solid #dddddd;
+                    }
+
+                    .email-header {
+                        text-align: center;
+                        padding: 10px 0;
+                        background-color: #2B2B2B;
+                        color: #ffffff;
+                    }
+
+                    .email-header h1 {
+                        margin: 0;
+                        font-size: 24px;
+                    }
+
+                    .email-body {
+                        padding: 20px;
+                        color: #333333;
+                    }
+
+                    .email-body h3 {
+                        font-size: 20px;
+                        margin-top: 0;
+                    }
+
+                    .email-footer {
+                        text-align: center;
+                        padding: 10px;
+                        background-color: #f4f4f4;
+                        font-size: 14px;
+                        color: #888888;
+                    }
+
+                    .otp {
+                        text-align: center;
+                        padding: 20px 10px;
+                        letter-spacing: 10px;
+                        font-size: 32px;
+                        font-weight: 400;
+                    }
+
+                    small {
+                        display: block;
+                        margin-bottom: 5px;
+                        color: #00000074;
+                    }
+                </style>
+            </head>
+
+            <body>
+                <div class="email-container">
+                    <div class="email-header">
+                        <h1>X DevLab</h1>
+                    </div>
+                    <div class="email-body">
+                        <h3>Usa el siguiente código para autorizar la hora de salida.</h3>
+                        <small>Este código es valido únicamente por 20 minutos.</small>
+
+                        <p class="otp">${OTP}</p>
+                    </div>
+                    <div class="email-footer">
+                        <p>&copy; ${year.getFullYear()} Choco Market. Todos los derechos reservados.</p>
+                    </div>
+                </div>
+            </body>
+
+            </html>
+        `
         try {
             const response = await sendPersonalEmail(correoRandom, subject, body)
             return response
