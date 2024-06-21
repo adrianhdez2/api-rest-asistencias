@@ -546,7 +546,7 @@ export class AlumnosModel {
             [`%${newMatricula}%`]
         )
 
-        if (!alumno) return null
+        if (!alumno) return []
 
         return alumno
     }
