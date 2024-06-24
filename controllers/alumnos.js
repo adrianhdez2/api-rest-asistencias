@@ -142,12 +142,12 @@ export class AlumnosController {
             if (hours >= 4) {
                 try {
                     const OTP = generateOTP()
-                    const expires_at = new Date(Date.now() + 20 * 60 * 1000);
+                    const expires_at = new Date(Date.now() + 30 * 60 * 1000);
                     const userInf = await AlumnosModel.saveOTP({ newMatricula, OTP, expires_at })
 
                     if (!userInf) return res.status(401).json({ error: "Ocurrio un error al guardar el código" })
 
-                    await AlumnosModel.sendEmailOTP({ correoRandom, OTP, newMatricula, nombre })
+                    // await AlumnosModel.sendEmailOTP({ correoRandom, OTP, newMatricula, nombre })
 
                     const admin = await AlumnosModel.getAdminNameByEmail({ correoRandom })
                     const nombreAdmin = admin.nombres + " " + admin.apellido_p + " " + admin.apellido_m

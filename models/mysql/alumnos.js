@@ -4,7 +4,7 @@ import { sendPersonalEmail } from '../../utils/sendEmail.js'
 export class AlumnosModel {
     static async getStudents() {
         const [alumno] = await connection.query(
-            'SELECT estudiantes.id_estudiante AS id_estudiante_estudiantes, estudiantes.nombres, estudiantes.apellido_p, estudiantes.apellido_m, estudiantes.matricula, estudiantes.tipo, estudiantes.estado, estudiantes.password, IFNULL(suma_horas.total_horas, 0) AS total_horas FROM estudiantes LEFT JOIN (SELECT id_estudiante, SUM(total_horas) AS total_horas FROM horas GROUP BY id_estudiante) AS suma_horas ON estudiantes.id_estudiante = suma_horas.id_estudiante ORDER BY estudiantes.tipo DESC'
+            'SELECT estudiantes.id_estudiante AS id_estudiante_estudiantes, estudiantes.nombres, estudiantes.apellido_p, estudiantes.apellido_m, estudiantes.matricula, estudiantes.tipo, estudiantes.estado, estudiantes.password, IFNULL(suma_horas.total_horas, 0) AS total_horas FROM estudiantes LEFT JOIN (SELECT id_estudiante, SUM(total_horas) AS total_horas FROM horas GROUP BY id_estudiante) AS suma_horas ON estudiantes.id_estudiante = suma_horas.id_estudiante ORDER BY total_horas DESC, estudiantes.tipo ASC'
         )
 
         if (!alumno) return []
@@ -466,7 +466,7 @@ export class AlumnosModel {
                     </div>
                     <div class="email-body">
                         <h3>Usa el siguiente código para autorizar la hora de salida.</h3>
-                        <small>Este código es valido únicamente por 20 minutos.</small>
+                        <small>Este código es valido únicamente por 30 minutos.</small>
 
                         <p class="otp">${OTP}</p>
                     </div>
